@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+/.vs
+/TextEditor/.vs/TextEditor
+/TextEditor/x64/Release
+/TextEditor/TextEditor/x64
