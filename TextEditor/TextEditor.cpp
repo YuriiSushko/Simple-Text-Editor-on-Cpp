@@ -2,14 +2,84 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <limits>
+#include <tuple>
+using namespace std;
+
+struct CharPointer {
+    int p;
+    char ch;
+};
+
+class Cursor {
+private:
+    int* size;
+    static int cursor_position;
+public:
+    Cursor(int* size) : size(size) { }
+
+    int move_right() {
+        if (cursor_position < *size) {
+            cursor_position++;
+        }
+        return cursor_position;
+    }
+
+    int move_left() {
+        if (cursor_position > 0) {
+            cursor_position--;
+        }
+        return cursor_position;
+    }
+
+    int get_position() {
+        return cursor_position;
+    }
+
+    void set_cursor_position(tuple<int, int> position, CharPointer* dynamic_array) {
+        int line = 0;
+        int column = 0;
+
+        for (int i = 0; i < *size; i++) {
+            if (dynamic_array[i].ch == '\n') {
+                line++;
+            }
+
+            column++;
+
+            if (line == get<0>(position)) {
+                int sub_column = 0;
+                while (sub_column != get<1>(position)) {
+                    sub_column++;
+                    column++;
+                }
+
+                if (sub_column == get<1>(position)) {
+                    cursor_position = column-1;
+                    break;
+                }
+                else
+                {
+                    cout << "There is no such column in line\n";
+                    break;
+                }
+
+            }
+            else
+            {
+                cout << "There is no such position in text\n";
+                break;
+            }
+        }
+    }
+
+};
+
+
+int Cursor::cursor_position = -1;
 
 class MyTextEditor {
 private:
-    struct CharPointer {
-        int p;
-        char ch;
-    };
-
     CharPointer* dynamicArray;
     size_t capacity;
     int length;
@@ -27,11 +97,17 @@ public:
         free(dynamicArray);
     }
 
-    void print() const {
+    void print(int cursor_position = -1) const {
         for (int i = 0; i < length; i++) {
-            std::cout << dynamicArray[i].ch;
+            if (cursor_position == i) {
+                cout << "|";
+            }
+            cout << dynamicArray[i].ch;
         }
-        std::cout << std::endl;
+        if (cursor_position == length) {
+            cout << "|";
+        }
+        cout << std::endl;
     }
 
     void to_realloc() {
@@ -85,8 +161,8 @@ public:
 
     void exportToFile() {
         char fileName[64];
-        std::cout << "Enter a filename: ";
-        std::cin >> fileName;
+        cout << "Enter a filename: ";
+        cin >> fileName;
 
         FILE* file;
         fopen_s(&file, fileName, "w");
@@ -95,7 +171,7 @@ public:
                 fputc(dynamicArray[i].ch, file);
             }
             fclose(file);
-            std::cout << "Text saved successfully!\n";
+            cout << "Text saved successfully!\n";
         }
         else {
             perror("Error opening file");
@@ -106,8 +182,8 @@ public:
         char loadstring[300];
         char fileNameToImport[64];
 
-        std::cout << "Enter a filename you want to import data from: ";
-        std::cin >> fileNameToImport;
+        cout << "Enter a filename you want to import data from: ";
+        cin >> fileNameToImport;
 
         FILE* fileImport;
         fopen_s(&fileImport, fileNameToImport, "r");
@@ -133,7 +209,7 @@ public:
                     }
                     dynamicArray[length].ch = '\0';
                 }
-                std::cout << loadstring;
+                cout << loadstring;
             }
             fclose(fileImport);
         }
@@ -144,8 +220,8 @@ public:
         int currentLine = 0;
         int currentColumn = 0;
 
-        std::cout << "Enter the line and column where to insert:\n";
-        std::cin >> line >> column;
+        cout << "Enter the line and column where to insert:\n";
+        cin >> line >> column;
 
         for (int i = 0; i < length; i++) {
             currentColumn++;
@@ -159,7 +235,7 @@ public:
                 int ch;
                 int insertIndex = i + 1;
 
-                std::cout << "Enter the text to insert:\n";
+                cout << "Enter the text to insert:\n";
 
                 while ((ch = getchar()) != '\n') {
                     if (capacity - length > 1) {
@@ -216,7 +292,7 @@ public:
                 char* temp = (char*)realloc(stringToSearch, capacity * sizeof(char));
                 if (!temp) {
                     perror("Failed to reallocate");
-                   
+
                     free(temp);
                     exit(EXIT_FAILURE);
                 }
@@ -247,7 +323,7 @@ public:
             }
 
             if (searchedStringPointer != NULL) {
-                std::cout << "The string was found at position: " << linePosition << " " << (searchedStringPointer - positionPointer) << std::endl;
+                cout << "The string was found at position: " << linePosition << " " << (searchedStringPointer - positionPointer) << endl;
                 tempArray = searchedStringPointer + strlen(stringToSearch);
             }
             else {
@@ -260,7 +336,7 @@ public:
     }
 
     void showCommands() const {
-        std::cout << "^1 - Append text symbols to the end\n"
+        cout << "^1 - Append text symbols to the end\n"
             << "^2 - Start the new line\n"
             << "^3 - Print the current text\n"
             << "^4 - Load the text to file\n"
@@ -274,53 +350,75 @@ public:
 
     void run() {
         int command;
-
-        std::cout << "Welcome to my simple text editor\nEnter 8 to print the command list\n";
-
+        cout << "Welcome to my simple text editor\nEnter 8 to print the command list\n";
+        
         while (true) {
-            std::cout << "\nEnter the command\n";
-            std::cin >> command;
+            Cursor cursor(&length);
 
-            if (command == 'q') {
+            cout << "\nEnter the command\n";
+            cin >> command;
+
+            if (cin.fail()) { 
+                cout << "Invalid input. Please enter an integer.\n";
+                cin.clear(); 
+                cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); 
+                continue; 
+            } 
+            cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+            if (command == 11) {
                 break;
             }
 
             switch (command) {
+            case 13:
+                print(cursor.move_right());
+                break;
+            case 14:
+                print(cursor.move_left());
+                break;
             case 8:
                 showCommands();
                 break;
             case 1:
-                std::cout << "\033[H\033[J";
-                std::cout << "Enter the text to append\n";
+                cout << "\033[H\033[J";
+                cout << "Enter the text to append\n";
                 appendText(false);
+                if (cursor.get_position() == -1) {
+                    cursor.set_cursor_position(make_tuple(0, length), dynamicArray);
+                }
+                cout << "\033[H\033[J";
+                print(cursor.get_position());
                 break;
             case 2:
-                std::cout << "\033[H\033[J";
+                cout << "\033[H\033[J";
                 appendText(true);
-                std::cout << "New line added successfully\n";
+                print(cursor.get_position());
+                cout << "New line added successfully\n";
                 break;
             case 3:
-                std::cout << "\033[H\033[J";
-                std::cout << "Printed text: \n";
-                print();
+                cout << "\033[H\033[J";
+                cout << "Printed text: \n";
+                print(cursor.get_position());
                 break;
             case 4:
-                std::cout << "\033[H\033[J";
+                cout << "\033[H\033[J";
                 exportToFile();
                 break;
             case 5:
-                std::cout << "\033[H\033[J";
+                cout << "\033[H\033[J";
                 importFromFile();
                 break;
             case 6:
-                std::cout << "\033[H\033[J";
+                cout << "\033[H\033[J";
                 insertByLineAndIndex();
+                print(cursor.get_position());
                 break;
             case 7:
                 searchText();
                 break;
             default:
-                std::cout << "Please enter the commands correctly and without ^ symbol\n";
+                cout << "Please enter the commands correctly and without ^ symbol\n";
                 break;
             }
         }
