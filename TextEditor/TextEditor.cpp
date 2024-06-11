@@ -237,7 +237,7 @@ public:
         }
     }
 
-    void insertByLineAndIndex(int position) {
+    void Insert_with_replacment(int position) {
         int string_length;
 
         cout << "Enter the length of string:\n";
@@ -248,6 +248,42 @@ public:
         cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
         appendText(false, position);
+    }
+
+    void insertByLineAndIndex(int position) {
+        int ch;
+        cout << "Enter the text to insert:\n";
+
+        while ((ch = getchar()) != '\n') {
+            if (capacity - length > 1) {
+                for (int j = length; j >= position; j--) {
+                    dynamicArray[j + 1].ch = dynamicArray[j].ch;
+                    dynamicArray[j + 1].p = dynamicArray[j].p;
+                }
+
+                dynamicArray[position].ch = ch;
+                dynamicArray[position].p = dynamicArray[position-1].p + 1;
+            }
+            else {
+                to_realloc();
+
+                for (int j = length; j >= position; j--) {
+                    dynamicArray[j + 1].ch = dynamicArray[j].ch;
+                    dynamicArray[j + 1].p = dynamicArray[j].p;
+                }
+
+                dynamicArray[position].ch = ch;
+                dynamicArray[position].p = dynamicArray[position - 1].p + 1;;
+            }
+
+            position++;
+            length++;
+        }
+
+        dynamicArray[length].ch = '\0';
+        return;
+        
+
     }
 
     void searchText() const {
@@ -334,6 +370,8 @@ public:
     void run() {
         int command;
         int line = 0;
+        int line_to_insert = 0;
+        int column_to_insert = 0;
         cout << "Welcome to my simple text editor\nEnter 8 to print the command list\n";
         
         while (true) {
@@ -394,11 +432,21 @@ public:
                 break;
             case 6:
                 cout << "\033[H\033[J";
-                insertByLineAndIndex(cursor.get_position());
+                Insert_with_replacment(cursor.get_position());
                 break;
             case 7:
+                cout << "\033[H\033[J";
                 searchText();
                 break;
+            case 9:
+                cout << "\033[H\033[J";
+                cout << "Enter line and column to insert\n";
+                cin >> line_to_insert >> column_to_insert;
+                cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+                cursor.set_cursor_position(make_tuple(line_to_insert, column_to_insert), dynamicArray);
+                insertByLineAndIndex(cursor.get_position());
+
             default:
                 cout << "Please enter the commands correctly and without ^ symbol\n";
                 break;
