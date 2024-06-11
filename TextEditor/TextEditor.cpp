@@ -250,8 +250,21 @@ public:
         appendText(false, position);
     }
 
-    void insertByLineAndIndex(int position) {
+    void insertByLineAndIndex() {
         int ch;
+        Cursor cursor(&length);
+
+        int line_to_insert = 0;
+        int column_to_insert = 0;
+        int position;
+
+        cout << "Enter line and column to insert\n";
+        cin >> line_to_insert >> column_to_insert;
+        cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+        cursor.set_cursor_position(make_tuple(line_to_insert, column_to_insert), dynamicArray);
+        position = cursor.get_position();
+
         cout << "Enter the text to insert:\n";
 
         while ((ch = getchar()) != '\n') {
@@ -283,6 +296,25 @@ public:
         dynamicArray[length].ch = '\0';
         return;
         
+
+    }
+
+    void delete_chars(int start_position) {
+        int num_chars_to_delete = 0;
+        cout << "Enter number of chars you want to delate\n";
+        cin >> num_chars_to_delete;
+        cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+        int new_length = length - num_chars_to_delete;
+        if (new_length < start_position) {
+            new_length = start_position;
+        }
+
+        for (int i = start_position; i < new_length; i++) {
+            dynamicArray[i] = dynamicArray[i + num_chars_to_delete];
+        }
+
+        length = new_length;
 
     }
 
@@ -370,8 +402,7 @@ public:
     void run() {
         int command;
         int line = 0;
-        int line_to_insert = 0;
-        int column_to_insert = 0;
+
         cout << "Welcome to my simple text editor\nEnter 8 to print the command list\n";
         
         while (true) {
@@ -440,13 +471,11 @@ public:
                 break;
             case 9:
                 cout << "\033[H\033[J";
-                cout << "Enter line and column to insert\n";
-                cin >> line_to_insert >> column_to_insert;
-                cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-
-                cursor.set_cursor_position(make_tuple(line_to_insert, column_to_insert), dynamicArray);
-                insertByLineAndIndex(cursor.get_position());
-
+                insertByLineAndIndex();
+            case 10:
+                cout << "\033[H\033[J";
+                delete_chars(cursor.get_position());
+                break;
             default:
                 cout << "Please enter the commands correctly and without ^ symbol\n";
                 break;
