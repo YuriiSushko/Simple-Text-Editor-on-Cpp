@@ -509,11 +509,17 @@ public:
             << "^3 - Print the current text\n"
             << "^4 - Load the text to file\n"
             << "^5 - Load the text from file\n"
-            << "^6 - Insert line by line and text symbol index\n"
+            << "^6 - Substitute string by line and text symbol index\n"
             << "^7 - Search text\n"
             << "^8 - to print the command list\n"
-            << "^c - Clear the console\n"
-            << "^q - quit from program\n";
+            << "^9 - Insert string by line and text symbol index\n"
+            << "^10 - Delete string from cursor position\n"
+            << "^11 - Undo comand\n"
+            << "^12 - Redo comand\n"
+            << "^13 - Copy from cursor position\n"
+            << "^14 - Cut from cursor position\n"
+            << "^15 - Paste text to bufer\n"
+            << "^-1 - quit from program\n";
     }
 
     void run(bool if_undo = false) {
@@ -545,10 +551,10 @@ public:
             }
 
             switch (command) {
-            case 22:
+            case 33:
                 cursor.move_right();
                 break;
-            case 33:
+            case 22:
                 cursor.move_left();
                 break;
             case 8:
@@ -594,11 +600,11 @@ public:
             case 9:
                 cout << "\033[H\033[J";
 
-                cout << "Enter line and column to insert\n";
+                /*cout << "Enter line and column to insert\n";
                 cin >> line_to_insert >> column_to_insert;
                 cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-                cursor.set_cursor_position(make_tuple(line_to_insert, column_to_insert), dynamicArray);
+                cursor.set_cursor_position(make_tuple(line_to_insert, column_to_insert), dynamicArray);*/
                 insertByLineAndIndex(cursor.get_position());
             case 10:
                 cout << "\033[H\033[J";
@@ -623,7 +629,7 @@ public:
                 break;
             case 14:
                 cout << "\033[H\033[J";
-                cout << "Please, enter the number of symbols to copy\n";
+                cout << "Please, enter the number of symbols to cut\n";
                 cin >> number_of_symbols;
                 cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
