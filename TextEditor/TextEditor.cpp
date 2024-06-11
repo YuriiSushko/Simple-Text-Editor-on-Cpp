@@ -41,6 +41,7 @@ public:
         int column = 0;
 
         for (int i = 0; i < *size; i++) {
+
             if (dynamic_array[i].ch == '\n') {
                 line++;
             }
@@ -55,7 +56,13 @@ public:
                 }
 
                 if (sub_column == get<1>(position)) {
-                    cursor_position = column-1;
+                    if (get<0>(position) == 0) {
+                        cursor_position = column-1;
+                    }
+                    else
+                    {
+                        cursor_position = column;   
+                    }
                     break;
                 }
                 else
@@ -65,11 +72,9 @@ public:
                 }
 
             }
-            else
-            {
-                cout << "There is no such position in text\n";
-                break;
-            }
+        }
+        if (line != get<0>(position)) {
+            cout << "There is no such position in text\n";
         }
     }
 
@@ -121,9 +126,20 @@ public:
         dynamicArray = tempArray;
     }
 
-    void appendText(bool ifItNewLine) {
+    void appendText(bool ifItNewLine, int start_position = -1) {
         int ch;
         static int index = 0;
+
+        if (start_position != -1) {
+            int ch;
+            cout << "Enter text to insert:\n";
+            while (!ifItNewLine && (ch = getchar()) != '\n') {
+                dynamicArray[start_position++].ch = ch;
+                Cursor cursor(&length);
+                cursor.move_right();
+            }
+            return;
+        }
 
         while (true) {
             if (ifItNewLine) {
@@ -139,18 +155,19 @@ public:
 
             if (index < static_cast<int>(capacity) - 1) {
                 dynamicArray[index].ch = ch;
-                dynamicArray[index].p = index;
                 index++;
+                dynamicArray[index].p = dynamicArray[index - 1].p + 1;
             }
             else {
                 to_realloc();
                 dynamicArray[index].ch = ch;
-                dynamicArray[index].p = index;
                 index++;
+                dynamicArray[index].p = dynamicArray[index-1].p + 1;
             }
 
             if (ifItNewLine) {
                 length = index;
+                dynamicArray[index].p = 0;
                 return;
             }
         }
@@ -198,15 +215,20 @@ public:
                 for (int i = 0; i < lineLength; i++) {
                     if (length < static_cast<int>(capacity) - 1) {
                         dynamicArray[length].ch = loadstring[i];
-                        dynamicArray[length].p = length;
                         length++;
+                        dynamicArray[length].p = dynamicArray[length - 1].p + 1;
                     }
                     else {
                         to_realloc();
                         dynamicArray[length].ch = loadstring[i];
-                        dynamicArray[length].p = length;
                         length++;
+                        dynamicArray[length].p = dynamicArray[length - 1].p + 1;
                     }
+
+                    if (loadstring[i] == '\n') {
+                        dynamicArray[length].p = 0;
+                    }
+
                     dynamicArray[length].ch = '\0';
                 }
                 cout << loadstring;
@@ -215,56 +237,17 @@ public:
         }
     }
 
-    void insertByLineAndIndex() {
-        int line, column;
-        int currentLine = 0;
-        int currentColumn = 0;
+    void insertByLineAndIndex(int position) {
+        int string_length;
 
-        cout << "Enter the line and column where to insert:\n";
-        cin >> line >> column;
-
-        for (int i = 0; i < length; i++) {
-            currentColumn++;
-
-            if (dynamicArray[i].ch == '\n') {
-                currentLine++;
-                currentColumn = 0;
-            }
-
-            if (currentColumn == column && currentLine == line) {
-                int ch;
-                int insertIndex = i + 1;
-
-                cout << "Enter the text to insert:\n";
-
-                while ((ch = getchar()) != '\n') {
-                    if (capacity - length > 1) {
-                        for (int j = length; j >= insertIndex; j--) {
-                            dynamicArray[j + 1] = dynamicArray[j];
-                        }
-
-                        dynamicArray[insertIndex].ch = ch;
-                        dynamicArray[insertIndex].p = insertIndex;
-                    }
-                    else {
-                        to_realloc();
-
-                        for (int j = length; j >= insertIndex; j--) {
-                            dynamicArray[j + 1] = dynamicArray[j];
-                        }
-
-                        dynamicArray[insertIndex].ch = ch;
-                        dynamicArray[insertIndex].p = insertIndex;
-                    }
-
-                    insertIndex++;
-                    length++;
-                }
-
-                dynamicArray[length].ch = '\0';
-                return;
-            }
+        cout << "Enter the length of string:\n";
+        cin >> string_length;
+        if (length + string_length > static_cast<int>(capacity) - 1) {
+            to_realloc();
         }
+        cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+        appendText(false, position);
     }
 
     void searchText() const {
@@ -350,6 +333,7 @@ public:
 
     void run() {
         int command;
+        int line = 0;
         cout << "Welcome to my simple text editor\nEnter 8 to print the command list\n";
         
         while (true) {
@@ -372,10 +356,10 @@ public:
 
             switch (command) {
             case 13:
-                print(cursor.move_right());
+                cursor.move_right();
                 break;
             case 14:
-                print(cursor.move_left());
+                cursor.move_left();
                 break;
             case 8:
                 showCommands();
@@ -384,22 +368,21 @@ public:
                 cout << "\033[H\033[J";
                 cout << "Enter the text to append\n";
                 appendText(false);
-                if (cursor.get_position() == -1) {
-                    cursor.set_cursor_position(make_tuple(0, length), dynamicArray);
-                }
+
+                cursor.set_cursor_position(make_tuple(line, dynamicArray[length].p), dynamicArray);
                 cout << "\033[H\033[J";
-                print(cursor.get_position());
                 break;
             case 2:
                 cout << "\033[H\033[J";
                 appendText(true);
-                print(cursor.get_position());
+                line++;
+                cursor.set_cursor_position(make_tuple(line, dynamicArray[length].p), dynamicArray);
+
                 cout << "New line added successfully\n";
                 break;
             case 3:
                 cout << "\033[H\033[J";
                 cout << "Printed text: \n";
-                print(cursor.get_position());
                 break;
             case 4:
                 cout << "\033[H\033[J";
@@ -411,8 +394,7 @@ public:
                 break;
             case 6:
                 cout << "\033[H\033[J";
-                insertByLineAndIndex();
-                print(cursor.get_position());
+                insertByLineAndIndex(cursor.get_position());
                 break;
             case 7:
                 searchText();
@@ -421,6 +403,7 @@ public:
                 cout << "Please enter the commands correctly and without ^ symbol\n";
                 break;
             }
+            print(cursor.get_position());
         }
     }
 };
