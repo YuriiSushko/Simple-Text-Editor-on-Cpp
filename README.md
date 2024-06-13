@@ -26,6 +26,7 @@
 - **Action:** Insert text without substituting the existing text at the cursor position.
 - **Expected Result:** New text is inserted, and existing text is shifted accordingly.
 - **Verification:** ![Substituted Text](screenshots/5.jpg)
+- ![Substituted Text](screenshots/5.2.jpg)
 
 ### 6. Delete Text
 - **Action:** Use the command to delete text from the cursor position.
